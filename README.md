@@ -23,5 +23,5 @@ with:
 ## Building
 
 ```bash
-$ npx ncc build index.js --license licenses.txt
+$ ncc build index.js
 ```
