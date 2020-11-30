@@ -12,23 +12,26 @@ jobs:
         uses: actions/checkout@v2
       - name: Get Pink Blossoms Inventory
         uses: ./ # Uses an action in the root directory
-        id: pink_blossoms
+        id: get_inventory
       - name: Save Data
         run: |-
           mkdir -p data
-          echo ${{ toJSON(steps.pink_blossoms.outputs.items) }} | jq --sort-keys '.' > data/pink_blossoms.json
+          echo ${{ toJSON(steps.get_inventory.outputs.items) }} | jq --sort-keys '.' > data/pink_blossoms.json
       - name: Commit and push if it changed
         id: commit
         run: |-
           git config user.name "Scraper"
           git config user.email "actions@users.noreply.github.com"
           git add -A
-          timestamp=$(date -u)
-          git commit -m "Pink Blossoms: ${timestamp}" || exit 1
-          git push
+          if git commit -m "Pink Blossoms update"; then
+            git push
+            echo '::set-output name=updated::true'
+          else
+            echo '::set-output name=updated::false'
+          fi
       - name: Send mail
         uses: dawidd6/action-send-mail@v2
-        if: ${{ success() }}
+        if: ${{ steps.commit.outputs.updated == 'true' }}
         with:
           server_address: smtp.gmail.com
           server_port: 465
