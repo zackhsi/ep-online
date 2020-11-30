@@ -1,35 +1,40 @@
-on: [push]
+on:
+  push:
+  schedule:
+    - cron: "6 * * * *"
 
 jobs:
-  hello_world_job:
+  pink_blossoms:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Pink Blossoms
     steps:
-      # To use this repository's private action,
-      # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Hello world action step
+      - name: Get Pink Blossoms Inventory
         uses: ./ # Uses an action in the root directory
-        id: hello
-        with:
-          who-to-greet: "Mona the Octocat"
-      # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+        id: pink_blossoms
+      - name: Save Data
+        run: |-
+          mkdir -p data
+          echo ${{ toJSON(steps.pink_blossoms.outputs.items) }} | jq --sort-keys '.' > data/pink_blossoms.json
+      - name: Commit and push if it changed
+        id: commit
+        run: |-
+          git config user.name "Scraper"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "Pink Blossoms: ${timestamp}" || exit 1
+          git push
       - name: Send mail
         uses: dawidd6/action-send-mail@v2
+        if: ${{ success() }}
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{secrets.MAIL_USERNAME}}
           password: ${{secrets.MAIL_PASSWORD}}
-          subject: Github Actions job result
-          # Literal body:
-          body: Build job of ${{github.repository}} completed successfully!
-          # # Read file contents as body:
-          # body: file://README.md
+          subject: Pink Blossoms Inventory Update
+          body: file://data/pink_blossoms.json
           to: zackhsi@gmail.com
           from: Scraper
-          # Optional content type (defaults to text/plain):
-          content_type: text/html
