@@ -3,11 +3,14 @@ const github = require("@actions/github");
 
 const { JSDOM } = require("jsdom");
 
-try {
-  JSDOM.fromURL(
-    "https://shop.pinkblossomsbrewing.com/collections/featured-beers",
-    {}
-  ).then((dom) => {
+const payload = JSON.stringify(github.context.payload, undefined, 2);
+console.log(`The event payload: ${payload}`);
+
+JSDOM.fromURL(
+  "https://shop.pinkblossomsbrewing.com/collections/featured-beers",
+  {}
+)
+  .then((dom) => {
     const items = {};
     dom.window.document.querySelectorAll(".grid__item").forEach((item) => {
       const title = item.querySelector(".grid-view-item__title");
@@ -22,9 +25,9 @@ try {
     const itemsString = JSON.parse(JSON.stringify(items));
     console.log({ itemsString });
     core.setOutput("items", itemsString);
+  })
+  .catch((error) => {
+    console.log({ error });
+    console.log(`Setting step as failed: ${error.message}`);
+    core.setFailed(error.message);
   });
-  const payload = JSON.stringify(github.context.payload, undefined, 2);
-  console.log(`The event payload: ${payload}`);
-} catch (error) {
-  core.setFailed(error.message);
-}
