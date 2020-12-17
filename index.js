@@ -13,13 +13,14 @@ try {
       const title = item.querySelector(".grid-view-item__title");
       const price = item.querySelector(".price-item");
       if (title != null && price != null) {
-        console.log(title.innerHTML.trim());
-        console.log(price.innerHTML.trim());
-        items[title.innerHTML.trim()] = price.innerHTML.trim();
+        const key = title.innerHTML.trim();
+        const value = price.innerHTML.trim().replace("$", "");
+        items[key] = value;
       }
     });
+    console.log({ items });
     const itemsString = JSON.parse(JSON.stringify(items));
-    console.log(itemsString);
+    console.log({ itemsString });
     core.setOutput("items", itemsString);
   });
   const payload = JSON.stringify(github.context.payload, undefined, 2);
